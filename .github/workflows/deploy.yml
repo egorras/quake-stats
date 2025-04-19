@@ -56,9 +56,10 @@ jobs:
             # Set proper permissions
             sudo chmod -R 755 /opt/quake-stats
             
-            # Install ZeroMQ runtime libraries and C++ standard library
+            # Fix broken dependencies and install required libraries
             sudo apt-get update
-            sudo apt-get install -y libzmq5 libstdc++6
+            sudo apt --fix-broken install -y
+            sudo apt-get install -y libzmq5 libstdc++6 libnorm1 libpgm-5.3-0
           
       - name: Copy files to VM using SCP
         run: |
