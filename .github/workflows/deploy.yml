@@ -25,7 +25,8 @@ jobs:
         run: |
           cd src/collector
           go mod tidy
-          go build -ldflags="-s -w" -o collector
+          # Build with static linking to avoid dependency issues
+          CGO_ENABLED=1 go build -ldflags="-s -w -linkmode external -extldflags '-static'" -o collector
       
       - name: Create deployment package
         run: |
@@ -54,6 +55,10 @@ jobs:
             sudo chown -R ${{ secrets.VM_USERNAME }}:${{ secrets.VM_USERNAME }} /opt/quake-stats
             # Set proper permissions
             sudo chmod -R 755 /opt/quake-stats
+            
+            # Install ZeroMQ runtime libraries
+            sudo apt-get update
+            sudo apt-get install -y libzmq5
           
       - name: Copy files to VM using SCP
         run: |
@@ -67,12 +72,6 @@ jobs:
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
             cd /opt/quake-stats
-            
-            # Install ZeroMQ if not already installed
-            if ! dpkg -l | grep -q libzmq3-dev; then
-              sudo apt-get update
-              sudo apt-get install -y libzmq3-dev
-            fi
             
             # Set up systemd service
             cat > /tmp/quake-collector.service << EOF
@@ -88,12 +87,18 @@ jobs:
             Restart=always
             RestartSec=10
             
-            # Environment variables (optional)
+            # Environment variables
             Environment="ZMQ_ENDPOINT=${{ secrets.ZMQ_ENDPOINT }}"
+            # Make sure system libraries are available
+            Environment="LD_LIBRARY_PATH=/usr/lib:/usr/local/lib"
             
             [Install]
             WantedBy=multi-user.target
             EOF
+            
+            # Verify the binary can find the libraries
+            ldd /opt/quake-stats/collector || echo "Static binary, no dependencies"
+            file /opt/quake-stats/collector
             
             # Install and start service
             sudo mv /tmp/quake-collector.service /etc/systemd/system/quake-collector.service
@@ -102,6 +107,7 @@ jobs:
             sudo systemctl restart quake-collector
             
             # Show status
+            sleep 2
             sudo systemctl status quake-collector
             
             echo "Service installed and running. Use these commands to manage it:"
