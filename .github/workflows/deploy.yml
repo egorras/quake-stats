@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  test-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -21,10 +21,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libzmq3-dev
       
-      - name: Build
+      - name: Run Tests
         run: |
           cd src/collector
           go mod tidy
+          go test -v ./...
+      
+      - name: Build
+        run: |
+          cd src/collector
           # Use CGO with dynamic linking
           CGO_ENABLED=1 go build -o collector
       
