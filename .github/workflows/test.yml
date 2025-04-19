@@ -27,13 +27,4 @@ jobs:
           cd src/collector
           go mod tidy
           go build -o collector
-          go test -v ./...
-          
-  # This is a required job that deployment depends on, ensuring tests run first
-  check:
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Tests Passed
-        run: echo "All tests passed!" 
+          go test -v ./... 

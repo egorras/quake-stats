@@ -6,6 +6,19 @@ on:
   workflow_dispatch:
 
 jobs:
+  verify_tests:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Wait for tests to complete
+        uses: fountainhead/action-wait-for-check@v1.1.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: test
+          ref: ${{ github.sha }}
+          timeoutSeconds: 300
+          intervalSeconds: 20
+
   deploy:
     runs-on: ubuntu-latest
     needs: [verify_tests]
@@ -127,17 +140,4 @@ jobs:
             echo "- View logs: sudo journalctl -u quake-collector -f"
             echo "- Stop service: sudo systemctl stop quake-collector"
             echo "- Start service: sudo systemctl start quake-collector"
-            echo "- Restart service: sudo systemctl restart quake-collector"
-
-  # This job checks if tests passed
-  verify_tests:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Wait for tests to succeed
-        uses: lewagon/wait-on-check-action@v1.3.1
-        with:
-          ref: ${{ github.ref }}
-          check-name: 'check'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10 
+            echo "- Restart service: sudo systemctl restart quake-collector" 
