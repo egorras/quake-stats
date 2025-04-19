@@ -7,4 +7,22 @@ services:
     volumes:
       - ./config.yaml:/app/config.yaml
     environment:
-      - ZMQ_ENDPOINT=tcp://89.168.29.137:27960 
+      - ZMQ_ENDPOINT=tcp://89.168.29.137:27960
+      - POSTGRES_ENABLED=true
+      - POSTGRES_CONNECTION_STRING=postgresql://postgres:postgres@postgres:5432/quake_stats?sslmode=disable
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=quake_stats
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: 

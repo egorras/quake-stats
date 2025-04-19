@@ -38,8 +38,20 @@ func main() {
 	// Setup signal handling
 	setupSignalHandling(cancel)
 
+	// Initialize PostgreSQL client if enabled
+	var dbClient *PostgresClient
+	if cfg.PostgresEnabled {
+		var err error
+		dbClient, err = NewPostgresClient(cfg)
+		if err != nil {
+			log.Printf("Warning: Failed to initialize PostgreSQL client: %v", err)
+		} else if dbClient != nil {
+			defer dbClient.Close()
+		}
+	}
+
 	// Create event processor
-	processor := NewEventProcessor(cfg)
+	processor := NewEventProcessor(cfg, dbClient)
 	go processor.Process(ctx)
 
 	// Create and start ZMQ collector

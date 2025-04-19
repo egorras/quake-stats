@@ -1,4 +1,9 @@
 zmq_endpoint: tcp://89.168.29.137:27960
 batch_size: 10
 flush_interval_sec: 1
-verbose_logging: true 
+verbose_logging: true
+
+# PostgreSQL configuration
+postgres_enabled: false  # Set to true to enable PostgreSQL storage
+postgres_connection_string: "postgresql://postgres:postgres@localhost:5432/quake_stats?sslmode=disable"
+postgres_table: events 

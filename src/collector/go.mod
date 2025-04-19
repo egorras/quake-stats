@@ -3,6 +3,7 @@ module quake-stats
 go 1.24.2
 
 require (
+	github.com/lib/pq v1.10.9
 	github.com/pebbe/zmq4 v1.3.0
 	github.com/spf13/viper v1.20.1
 )

@@ -20,6 +20,7 @@ type EventProcessor struct {
 	eventChan  chan Event
 	buffer     []Event
 	bufferSize int
+	dbClient   *PostgresClient
 	stats      struct {
 		eventsProcessed  int64
 		batchesProcessed int64
@@ -28,12 +29,13 @@ type EventProcessor struct {
 }
 
 // NewEventProcessor creates a new event processor
-func NewEventProcessor(cfg Config) *EventProcessor {
+func NewEventProcessor(cfg Config, dbClient *PostgresClient) *EventProcessor {
 	return &EventProcessor{
 		config:     cfg,
 		eventChan:  make(chan Event, 1000),
 		buffer:     make([]Event, 0, cfg.BatchSize),
 		bufferSize: cfg.BatchSize,
+		dbClient:   dbClient,
 		stats: struct {
 			eventsProcessed  int64
 			batchesProcessed int64
@@ -67,6 +69,16 @@ func (p *EventProcessor) Process(ctx context.Context) {
 	}
 }
 
+// Run implements the EventProcessor interface for testing
+func (p *EventProcessor) Run(ctx context.Context) {
+	p.Process(ctx)
+}
+
+// ProcessEvent implements the EventProcessor interface for testing
+func (p *EventProcessor) ProcessEvent(e Event) {
+	p.Submit(e)
+}
+
 // Submit adds an event to the processing queue
 func (p *EventProcessor) Submit(e Event) {
 	p.eventChan <- e
@@ -87,6 +99,13 @@ func (p *EventProcessor) flush() {
 	if p.config.VerboseLogging {
 		for i, e := range p.buffer {
 			log.Printf("Event %d: Type=%s, Data=%s", i, e.Type, string(e.Data))
+		}
+	}
+	
+	// Store events in PostgreSQL if enabled
+	if p.dbClient != nil {
+		if err := p.dbClient.StoreEvents(p.buffer); err != nil {
+			log.Printf("Error storing events in PostgreSQL: %v", err)
 		}
 	}
 	

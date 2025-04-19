@@ -17,6 +17,7 @@ type ZmqCollector struct {
 	socket     *zmq4.Socket
 	processor  *EventProcessor
 	isRemote   bool
+	cancelFunc context.CancelFunc
 }
 
 // NewZmqCollector creates a new ZMQ collector
@@ -71,6 +72,24 @@ func NewZmqCollector(endpoint string, processor *EventProcessor) (*ZmqCollector,
 		processor:  processor,
 		isRemote:   isRemoteConnection,
 	}, nil
+}
+
+// Run implements the Collector interface
+func (c *ZmqCollector) Run(ctx context.Context) error {
+	// Create a new context that we can cancel if Stop is called
+	runCtx, cancel := context.WithCancel(ctx)
+	c.cancelFunc = cancel
+	
+	// Start the collector and return any error
+	return c.Start(runCtx)
+}
+
+// Stop implements the Collector interface
+func (c *ZmqCollector) Stop() {
+	if c.cancelFunc != nil {
+		c.cancelFunc()
+	}
+	c.Close()
 }
 
 // Start begins collecting events from ZMQ
