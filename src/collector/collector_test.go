@@ -51,6 +51,7 @@ func (m *mockCollectorImplementation) Run(ctx context.Context) error {
 	m.started = true
 	select {
 	case <-ctx.Done():
+		m.Stop() // Make sure Stop is called when context is cancelled
 		return ctx.Err()
 	case <-m.stopChan:
 		return nil
@@ -58,8 +59,10 @@ func (m *mockCollectorImplementation) Run(ctx context.Context) error {
 }
 
 func (m *mockCollectorImplementation) Stop() {
-	m.stopped = true
-	close(m.stopChan)
+	if !m.stopped {
+		m.stopped = true
+		close(m.stopChan)
+	}
 }
 
 // mockCollectorFactory for testing
@@ -147,7 +150,9 @@ func TestCollectorManagerRun(t *testing.T) {
 	// Wait for the manager to exit
 	select {
 	case <-done:
-		// Success
+		// Success - manager exited
+		// Wait a bit to ensure the collector has time to be stopped
+		time.Sleep(50 * time.Millisecond)
 	case <-time.After(1 * time.Second):
 		t.Fatal("Manager did not exit after context cancellation")
 	}

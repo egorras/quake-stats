@@ -20,11 +20,23 @@ type Config struct {
 	PostgresTable           string
 }
 
+// configFlagDefined tracks if the config flag has been defined already
+var configFlagDefined bool
+
 // loadConfig reads configuration from file and environment variables
 func loadConfig() Config {
 	var configPath string
-	flag.StringVar(&configPath, "config", "config.yaml", "Path to configuration file (default: config.yaml)")
-	flag.Parse()
+	
+	// Only define the flag if it hasn't been defined yet
+	if !configFlagDefined {
+		flag.StringVar(&configPath, "config", "config.yaml", "Path to configuration file (default: config.yaml)")
+		configFlagDefined = true
+	}
+	
+	// Parse flags only if they haven't been parsed already
+	if !flag.Parsed() {
+		flag.Parse()
+	}
 
 	// Initialize viper
 	v := viper.New()

@@ -83,6 +83,10 @@ func (m *CollectorManager) Run(ctx context.Context) {
 		// If context is done, exit gracefully
 		select {
 		case <-ctx.Done():
+			// Make sure to explicitly stop the collector before returning
+			if m.currentCollector != nil {
+				m.currentCollector.Stop()
+			}
 			return
 		default:
 			// Continue to potential restart
