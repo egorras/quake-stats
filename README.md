@@ -1,1 +1,1 @@
-# Quake Stats Collector
+# Quake Stats
