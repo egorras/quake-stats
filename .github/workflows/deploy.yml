@@ -42,7 +42,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
           
-      - name: Prepare remote directory
+      - name: Prepare remote directory and fix permissions
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VM_HOST }}
@@ -51,10 +51,8 @@ jobs:
           script: |
             # Create directory if it doesn't exist
             sudo mkdir -p /opt/quake-stats
-            # Give your user ownership
-            sudo chown -R ${{ secrets.VM_USERNAME }}:${{ secrets.VM_USERNAME }} /opt/quake-stats
-            # Set proper permissions
-            sudo chmod -R 755 /opt/quake-stats
+            # Create a temporary directory with proper permissions
+            mkdir -p ~/quake-stats-temp
             
             # Fix broken dependencies and install required libraries
             sudo apt-get update
@@ -63,15 +61,23 @@ jobs:
           
       - name: Copy files to VM using SCP
         run: |
-          scp -i ~/.ssh/deploy_key -r deploy/* ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }}:/opt/quake-stats/
+          # Copy to user's home directory first (where we know we have permissions)
+          scp -i ~/.ssh/deploy_key -r deploy/* ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }}:~/quake-stats-temp/
       
-      - name: Setup and run service
+      - name: Move files and set up service
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            # Move files to destination with sudo
+            sudo cp -R ~/quake-stats-temp/* /opt/quake-stats/
+            # Set proper ownership and permissions
+            sudo chown -R ${{ secrets.VM_USERNAME }}:${{ secrets.VM_USERNAME }} /opt/quake-stats
+            sudo chmod -R 755 /opt/quake-stats
+            sudo chmod +x /opt/quake-stats/collector
+            
             cd /opt/quake-stats
             
             # Set up systemd service
@@ -109,6 +115,9 @@ jobs:
             # Show status
             sleep 2
             sudo systemctl status quake-collector
+            
+            # Clean up temp directory
+            rm -rf ~/quake-stats-temp
             
             echo "Service installed and running. Use these commands to manage it:"
             echo "- View logs: sudo journalctl -u quake-collector -f"
