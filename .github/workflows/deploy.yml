@@ -32,16 +32,26 @@ jobs:
           mkdir -p deploy
           cp src/collector/collector deploy/
           cp src/collector/config.yaml deploy/
+          chmod +x deploy/collector
           
-      - name: Copy files to VM
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USERNAME }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          source: "deploy/*"
-          target: "/opt/quake-stats"
-          strip_components: 1
+      - name: Debug SSH connection
+        run: |
+          echo "Testing SSH connection..."
+          ssh -o StrictHostKeyChecking=no -v ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} -i $HOME/.ssh/deploy_key 'echo "SSH connection successful"' || echo "SSH connection failed"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VM_SSH_KEY }}
+        continue-on-error: true
+          
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Copy files to VM using SCP
+        run: |
+          scp -i ~/.ssh/deploy_key -r deploy/* ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }}:/opt/quake-stats/
       
       - name: Setup and run service
         uses: appleboy/ssh-action@master
