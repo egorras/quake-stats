@@ -15,13 +15,13 @@ import (
 type ZmqCollector struct {
 	endpoint   string
 	socket     *zmq4.Socket
-	processor  *EventProcessor
+	processor  EventProcessorInterface
 	isRemote   bool
 	cancelFunc context.CancelFunc
 }
 
 // NewZmqCollector creates a new ZMQ collector
-func NewZmqCollector(endpoint string, processor *EventProcessor) (*ZmqCollector, error) {
+func NewZmqCollector(endpoint string, processor EventProcessorInterface) (*ZmqCollector, error) {
 	// Check if we're connecting to a remote server or binding locally
 	isRemoteConnection := !strings.HasPrefix(endpoint, "tcp://127.0.0.1") && 
 	                      !strings.HasPrefix(endpoint, "tcp://localhost") && 
@@ -156,7 +156,7 @@ func (c *ZmqCollector) Start(ctx context.Context) error {
 			continue
 		}
 
-		c.processor.Submit(e)
+		c.processor.ProcessEvent(e)
 	}
 
 	return nil
