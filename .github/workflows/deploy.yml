@@ -1,0 +1,95 @@
+name: Deploy Collector
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libzmq3-dev
+      
+      - name: Build
+        run: |
+          cd src/collector
+          go mod tidy
+          go build -ldflags="-s -w" -o collector
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp src/collector/collector deploy/
+          cp src/collector/config.yaml deploy/
+          
+      - name: Copy files to VM
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          source: "deploy/*"
+          target: "/opt/quake-stats"
+          strip_components: 1
+      
+      - name: Setup and run service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd /opt/quake-stats
+            
+            # Install ZeroMQ if not already installed
+            if ! dpkg -l | grep -q libzmq3-dev; then
+              sudo apt-get update
+              sudo apt-get install -y libzmq3-dev
+            fi
+            
+            # Set up systemd service
+            cat > /tmp/quake-collector.service << EOF
+            [Unit]
+            Description=Quake Stats Collector
+            After=network.target
+            
+            [Service]
+            Type=simple
+            User=${{ secrets.VM_USERNAME }}
+            WorkingDirectory=/opt/quake-stats
+            ExecStart=/opt/quake-stats/collector
+            Restart=always
+            RestartSec=10
+            
+            # Environment variables (optional)
+            Environment="ZMQ_ENDPOINT=${{ secrets.ZMQ_ENDPOINT }}"
+            
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+            
+            # Install and start service
+            sudo mv /tmp/quake-collector.service /etc/systemd/system/quake-collector.service
+            sudo systemctl daemon-reload
+            sudo systemctl enable quake-collector
+            sudo systemctl restart quake-collector
+            
+            # Show status
+            sudo systemctl status quake-collector
+            
+            echo "Service installed and running. Use these commands to manage it:"
+            echo "- View logs: sudo journalctl -u quake-collector -f"
+            echo "- Stop service: sudo systemctl stop quake-collector"
+            echo "- Start service: sudo systemctl start quake-collector"
+            echo "- Restart service: sudo systemctl restart quake-collector" 

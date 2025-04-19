@@ -1,0 +1,4 @@
+zmq_endpoint: tcp://89.168.29.137:27960
+batch_size: 10
+flush_interval_sec: 1
+verbose_logging: true 
