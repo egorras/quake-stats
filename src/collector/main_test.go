@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
 	"syscall"
 	"testing"
 	"time"
@@ -35,6 +36,34 @@ func (m *mockCollector) Run(ctx context.Context) error {
 func (m *mockCollector) Stop() {
 	m.stopped = true
 	close(m.stopChan)
+}
+
+// runWithCollector simulates running the application with a specific collector
+func runWithCollector(ctx context.Context, collector Collector) {
+	// Set up signal handling
+	ctxWithCancel, cancel := context.WithCancel(ctx)
+	defer cancel()
+	
+	// Set up a channel to capture signals
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	
+	// Handle signals in a goroutine
+	go func() {
+		select {
+		case <-sigs:
+			// Signal received, cancel context
+			cancel()
+		case <-ctx.Done():
+			// Context already done, nothing to do
+		}
+	}()
+	
+	// Run the collector until context is cancelled
+	_ = collector.Run(ctxWithCancel)
+	
+	// Ensure collector is stopped
+	collector.Stop()
 }
 
 func TestSignalHandling(t *testing.T) {

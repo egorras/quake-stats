@@ -39,7 +39,7 @@ func main() {
 	setupSignalHandling(cancel)
 
 	// Initialize PostgreSQL client if enabled
-	var dbClient *PostgresClient
+	var dbClient DBClient
 	if cfg.PostgresEnabled {
 		var err error
 		dbClient, err = NewPostgresClient(cfg)

@@ -20,7 +20,7 @@ type EventProcessor struct {
 	eventChan  chan Event
 	buffer     []Event
 	bufferSize int
-	dbClient   *PostgresClient
+	dbClient   DBClient
 	stats      struct {
 		eventsProcessed  int64
 		batchesProcessed int64
@@ -29,7 +29,7 @@ type EventProcessor struct {
 }
 
 // NewEventProcessor creates a new event processor
-func NewEventProcessor(cfg Config, dbClient *PostgresClient) *EventProcessor {
+func NewEventProcessor(cfg Config, dbClient DBClient) *EventProcessor {
 	return &EventProcessor{
 		config:     cfg,
 		eventChan:  make(chan Event, 1000),

@@ -9,6 +9,12 @@ import (
 	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
+// DBClient interface for database operations
+type DBClient interface {
+	StoreEvents(events []Event) error
+	Close() error
+}
+
 // PostgresClient handles database operations
 type PostgresClient struct {
 	db        *sql.DB
@@ -17,7 +23,7 @@ type PostgresClient struct {
 }
 
 // NewPostgresClient creates a new PostgreSQL client
-func NewPostgresClient(cfg Config) (*PostgresClient, error) {
+func NewPostgresClient(cfg Config) (DBClient, error) {
 	if !cfg.PostgresEnabled {
 		return nil, nil
 	}

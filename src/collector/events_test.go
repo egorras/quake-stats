@@ -17,8 +17,8 @@ func TestEventProcessorFlushBySize(t *testing.T) {
 	// Channel to track when flushes happen
 	flushedEvents := make(chan []Event)
 
-	// Create a mock PostgresClient for testing
-	mockClient := &mockPostgresClient{
+	// Create a mock DB client for testing
+	mockClient := &mockDBClient{
 		storeEventsFunc: func(events []Event) error {
 			flushedEvents <- events
 			return nil
@@ -65,8 +65,8 @@ func TestEventProcessorFlushByTime(t *testing.T) {
 	// Channel to track when flushes happen
 	flushedEvents := make(chan []Event)
 
-	// Create a mock PostgresClient for testing
-	mockClient := &mockPostgresClient{
+	// Create a mock DB client for testing
+	mockClient := &mockDBClient{
 		storeEventsFunc: func(events []Event) error {
 			flushedEvents <- events
 			return nil
@@ -105,8 +105,8 @@ func TestEventProcessorContextCancellation(t *testing.T) {
 		FlushIntervalSec: 10,
 	}
 
-	// Create a mock PostgresClient that does nothing
-	mockClient := &mockPostgresClient{
+	// Create a mock DB client that does nothing
+	mockClient := &mockDBClient{
 		storeEventsFunc: func(events []Event) error {
 			return nil
 		},
@@ -135,18 +135,18 @@ func TestEventProcessorContextCancellation(t *testing.T) {
 	}
 }
 
-// Mock PostgresClient for testing
-type mockPostgresClient struct {
+// mockDBClient for testing
+type mockDBClient struct {
 	storeEventsFunc func(events []Event) error
 }
 
-func (m *mockPostgresClient) StoreEvents(events []Event) error {
+func (m *mockDBClient) StoreEvents(events []Event) error {
 	if m.storeEventsFunc != nil {
 		return m.storeEventsFunc(events)
 	}
 	return nil
 }
 
-func (m *mockPostgresClient) Close() error {
+func (m *mockDBClient) Close() error {
 	return nil
 } 
