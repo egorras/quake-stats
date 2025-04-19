@@ -22,24 +22,24 @@ type Collector interface {
 }
 
 // CollectorFactory is a function type for creating collectors
-type CollectorFactory func(config *Config, processor EventProcessor) (Collector, error)
+type CollectorFactory func(config *Config, processor EventProcessorInterface) (Collector, error)
 
 // CollectorManager manages the lifecycle of collectors
 type CollectorManager struct {
 	config         *Config
-	processor      EventProcessor
+	processor      EventProcessorInterface
 	createCollector CollectorFactory
 	currentCollector Collector
 }
 
-// EventProcessor interface for processing events
-type EventProcessor interface {
+// EventProcessorInterface interface for processing events
+type EventProcessorInterface interface {
 	ProcessEvent(Event)
 	Run(ctx context.Context)
 }
 
 // NewCollectorManager creates a new collector manager
-func NewCollectorManager(config *Config, processor EventProcessor, factory CollectorFactory) (*CollectorManager, error) {
+func NewCollectorManager(config *Config, processor EventProcessorInterface, factory CollectorFactory) (*CollectorManager, error) {
 	manager := &CollectorManager{
 		config:         config,
 		processor:      processor,

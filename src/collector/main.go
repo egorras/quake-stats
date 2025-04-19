@@ -52,18 +52,25 @@ func main() {
 
 	// Create event processor
 	processor := NewEventProcessor(cfg, dbClient)
-	go processor.Process(ctx)
+	
+	// Create ZMQ collector factory
+	createZmqCollector := func(config *Config, proc EventProcessorInterface) (Collector, error) {
+		// We know our processor is an EventProcessor, so we can use a type assertion
+		eventProcessor, ok := proc.(*EventProcessor)
+		if !ok {
+			return nil, &CollectorError{Message: "Invalid processor type", Recoverable: false}
+		}
+		return NewZmqCollector(config.ZmqEndpoint, eventProcessor)
+	}
 
-	// Create and start ZMQ collector
-	collector, err := NewZmqCollector(cfg.ZmqEndpoint, processor)
+	// Create collector manager
+	manager, err := NewCollectorManager(&cfg, processor, createZmqCollector)
 	if err != nil {
-		log.Fatalf("Failed to create ZMQ collector: %v", err)
+		log.Fatalf("Failed to create collector manager: %v", err)
 	}
 	
-	// Start collecting (this will block until context is cancelled)
-	if err := collector.Start(ctx); err != nil {
-		log.Fatalf("Failed to start ZMQ collector: %v", err)
-	}
+	// Start the manager (this will block until context is cancelled)
+	manager.Run(ctx)
 
 	log.Println("Collector shut down")
 } 

@@ -69,12 +69,12 @@ func (p *EventProcessor) Process(ctx context.Context) {
 	}
 }
 
-// Run implements the EventProcessor interface for testing
+// Run implements the EventProcessorInterface interface for testing
 func (p *EventProcessor) Run(ctx context.Context) {
 	p.Process(ctx)
 }
 
-// ProcessEvent implements the EventProcessor interface for testing
+// ProcessEvent implements the EventProcessorInterface interface for testing
 func (p *EventProcessor) ProcessEvent(e Event) {
 	p.Submit(e)
 }

@@ -29,12 +29,12 @@ type mockCollectorImplementation struct {
 	runError     error
 	eventsSent   []Event
 	stopChan     chan struct{}
-	processor    EventProcessor
+	processor    EventProcessorInterface
 	shouldFail   bool
 	failOnCreate bool
 }
 
-func newMockCollectorImplementation(processor EventProcessor, shouldFail, failOnCreate bool) *mockCollectorImplementation {
+func newMockCollectorImplementation(processor EventProcessorInterface, shouldFail, failOnCreate bool) *mockCollectorImplementation {
 	return &mockCollectorImplementation{
 		stopChan:     make(chan struct{}),
 		processor:    processor,
@@ -69,7 +69,7 @@ type mockCollectorFactory struct {
 	failOnCreate bool
 }
 
-func (f *mockCollectorFactory) CreateCollector(config *Config, processor EventProcessor) (Collector, error) {
+func (f *mockCollectorFactory) CreateCollector(config *Config, processor EventProcessorInterface) (Collector, error) {
 	mockCollector := newMockCollectorImplementation(processor, f.shouldFail, f.failOnCreate)
 	if mockCollector.failOnCreate {
 		return nil, &CollectorError{Message: "Failed to create collector"}
