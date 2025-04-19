@@ -34,20 +34,26 @@ jobs:
           cp src/collector/config.yaml deploy/
           chmod +x deploy/collector
           
-      - name: Debug SSH connection
-        run: |
-          echo "Testing SSH connection..."
-          ssh -o StrictHostKeyChecking=no -v ${{ secrets.VM_USERNAME }}@${{ secrets.VM_HOST }} -i $HOME/.ssh/deploy_key 'echo "SSH connection successful"' || echo "SSH connection failed"
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.VM_SSH_KEY }}
-        continue-on-error: true
-          
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Prepare remote directory
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            # Create directory if it doesn't exist
+            sudo mkdir -p /opt/quake-stats
+            # Give your user ownership
+            sudo chown -R ${{ secrets.VM_USERNAME }}:${{ secrets.VM_USERNAME }} /opt/quake-stats
+            # Set proper permissions
+            sudo chmod -R 755 /opt/quake-stats
           
       - name: Copy files to VM using SCP
         run: |
