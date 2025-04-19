@@ -2,41 +2,46 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 )
 
 func TestEventProcessorFlushBySize(t *testing.T) {
 	// Create a processor with small flush size
-	config := &Config{
-		Events: EventsConfig{
-			FlushSize:     3,
-			FlushInterval: 30, // Set high to ensure we're testing size-based flushing
-		},
+	config := Config{
+		BatchSize:        3, // Set small to ensure we're testing size-based flushing
+		FlushIntervalSec: 30, // Set high to ensure we're testing size-based flushing
 	}
 
 	// Channel to track when flushes happen
 	flushedEvents := make(chan []Event)
 
-	// Create a processor with a custom flush function
-	processor := NewEventProcessor(config, func(events []Event) {
-		flushedEvents <- events
-	})
+	// Create a mock PostgresClient for testing
+	mockClient := &mockPostgresClient{
+		storeEventsFunc: func(events []Event) error {
+			flushedEvents <- events
+			return nil
+		},
+	}
+
+	// Create a processor
+	processor := NewEventProcessor(config, mockClient)
 
 	// Start the processor
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go processor.Run(ctx)
+	go processor.Process(ctx)
 
 	// Send events
 	events := []Event{
-		{Type: "kill", Data: map[string]interface{}{"weapon": "shotgun"}},
-		{Type: "death", Data: map[string]interface{}{"cause": "fall"}},
-		{Type: "join", Data: map[string]interface{}{"player": "player1"}},
+		{Type: "kill", Data: json.RawMessage(`{"weapon": "shotgun"}`)},
+		{Type: "death", Data: json.RawMessage(`{"cause": "fall"}`)},
+		{Type: "join", Data: json.RawMessage(`{"player": "player1"}`)},
 	}
 
 	for _, e := range events {
-		processor.ProcessEvent(e)
+		processor.Submit(e)
 	}
 
 	// Wait for flush
@@ -52,30 +57,34 @@ func TestEventProcessorFlushBySize(t *testing.T) {
 
 func TestEventProcessorFlushByTime(t *testing.T) {
 	// Create a processor with small flush interval
-	config := &Config{
-		Events: EventsConfig{
-			FlushSize:     100, // Set high to ensure we're testing time-based flushing
-			FlushInterval: 1,   // 1 second
-		},
+	config := Config{
+		BatchSize:        100, // Set high to ensure we're testing time-based flushing
+		FlushIntervalSec: 1,   // 1 second
 	}
 
 	// Channel to track when flushes happen
 	flushedEvents := make(chan []Event)
 
-	// Create a processor with a custom flush function
-	processor := NewEventProcessor(config, func(events []Event) {
-		flushedEvents <- events
-	})
+	// Create a mock PostgresClient for testing
+	mockClient := &mockPostgresClient{
+		storeEventsFunc: func(events []Event) error {
+			flushedEvents <- events
+			return nil
+		},
+	}
+
+	// Create a processor
+	processor := NewEventProcessor(config, mockClient)
 
 	// Start the processor
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go processor.Run(ctx)
+	go processor.Process(ctx)
 
 	// Send a single event
-	processor.ProcessEvent(Event{
+	processor.Submit(Event{
 		Type: "kill",
-		Data: map[string]interface{}{"weapon": "shotgun"},
+		Data: json.RawMessage(`{"weapon": "shotgun"}`),
 	})
 
 	// Wait for time-based flush
@@ -91,21 +100,26 @@ func TestEventProcessorFlushByTime(t *testing.T) {
 
 func TestEventProcessorContextCancellation(t *testing.T) {
 	// Create a processor
-	config := &Config{
-		Events: EventsConfig{
-			FlushSize:     10,
-			FlushInterval: 10,
+	config := Config{
+		BatchSize:        10,
+		FlushIntervalSec: 10,
+	}
+
+	// Create a mock PostgresClient that does nothing
+	mockClient := &mockPostgresClient{
+		storeEventsFunc: func(events []Event) error {
+			return nil
 		},
 	}
 
-	processor := NewEventProcessor(config, func(events []Event) {})
+	processor := NewEventProcessor(config, mockClient)
 
 	// Start the processor with a context we'll cancel
 	ctx, cancel := context.WithCancel(context.Background())
 	processorDone := make(chan struct{})
 
 	go func() {
-		processor.Run(ctx)
+		processor.Process(ctx)
 		close(processorDone)
 	}()
 
@@ -119,4 +133,20 @@ func TestEventProcessorContextCancellation(t *testing.T) {
 	case <-time.After(1 * time.Second):
 		t.Fatal("Processor did not exit after context cancellation")
 	}
+}
+
+// Mock PostgresClient for testing
+type mockPostgresClient struct {
+	storeEventsFunc func(events []Event) error
+}
+
+func (m *mockPostgresClient) StoreEvents(events []Event) error {
+	if m.storeEventsFunc != nil {
+		return m.storeEventsFunc(events)
+	}
+	return nil
+}
+
+func (m *mockPostgresClient) Close() error {
+	return nil
 } 
