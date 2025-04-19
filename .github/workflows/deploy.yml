@@ -25,8 +25,8 @@ jobs:
         run: |
           cd src/collector
           go mod tidy
-          # Try building without CGO to avoid library dependencies
-          CGO_ENABLED=0 go build -o collector
+          # Use CGO with dynamic linking
+          CGO_ENABLED=1 go build -o collector
       
       - name: Create deployment package
         run: |
@@ -56,9 +56,9 @@ jobs:
             # Set proper permissions
             sudo chmod -R 755 /opt/quake-stats
             
-            # Install ZeroMQ runtime libraries
+            # Install ZeroMQ runtime libraries and C++ standard library
             sudo apt-get update
-            sudo apt-get install -y libzmq5
+            sudo apt-get install -y libzmq5 libstdc++6
           
       - name: Copy files to VM using SCP
         run: |
@@ -97,14 +97,7 @@ jobs:
             EOF
             
             # Check library dependencies
-            ldd /opt/quake-stats/collector || echo "Not a dynamic executable"
-            file /opt/quake-stats/collector
-            
-            # Install libzmq5 if not already installed
-            if ! dpkg -l | grep -q libzmq5; then
-              sudo apt-get update
-              sudo apt-get install -y libzmq5
-            fi
+            ldd /opt/quake-stats/collector
             
             # Install and start service
             sudo mv /tmp/quake-collector.service /etc/systemd/system/quake-collector.service
