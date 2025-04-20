@@ -18,6 +18,11 @@ type Config struct {
 	PostgresEnabled         bool
 	PostgresConnectionString string
 	PostgresTable           string
+	PostgresIdleTimeoutMin  int
+	FileBackupEnabled       bool
+	FileBackupPath          string
+	FileBackupMaxSizeMB     int
+	FileBackupMaxAgeHours   int
 }
 
 // configFlagDefined tracks if the config flag has been defined already
@@ -51,6 +56,13 @@ func loadConfig() Config {
 	v.SetDefault("postgres_enabled", false)
 	v.SetDefault("postgres_connection_string", "postgresql://postgres:postgres@localhost:5432/quake_stats?sslmode=disable")
 	v.SetDefault("postgres_table", "events")
+	v.SetDefault("postgres_idle_timeout_min", 5)
+	
+	// File backup defaults
+	v.SetDefault("file_backup_enabled", true)
+	v.SetDefault("file_backup_path", "backup/events")
+	v.SetDefault("file_backup_max_size_mb", 10)
+	v.SetDefault("file_backup_max_age_hours", 1)
 
 	// Configure viper to read environment variables
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -82,6 +94,11 @@ func loadConfig() Config {
 		PostgresEnabled:         v.GetBool("postgres_enabled"),
 		PostgresConnectionString: v.GetString("postgres_connection_string"),
 		PostgresTable:           v.GetString("postgres_table"),
+		PostgresIdleTimeoutMin:  v.GetInt("postgres_idle_timeout_min"),
+		FileBackupEnabled:       v.GetBool("file_backup_enabled"),
+		FileBackupPath:          v.GetString("file_backup_path"),
+		FileBackupMaxSizeMB:     v.GetInt("file_backup_max_size_mb"),
+		FileBackupMaxAgeHours:   v.GetInt("file_backup_max_age_hours"),
 	}
 
 	return config
@@ -98,5 +115,12 @@ func logConfig(cfg Config) {
 	if cfg.PostgresEnabled {
 		log.Printf("- Postgres: Using connection string")
 		log.Printf("- Postgres Table: %s", cfg.PostgresTable)
+		log.Printf("- Postgres Idle Timeout: %d minutes", cfg.PostgresIdleTimeoutMin)
+	}
+	log.Printf("- File Backup Enabled: %v", cfg.FileBackupEnabled)
+	if cfg.FileBackupEnabled {
+		log.Printf("- File Backup Path: %s", cfg.FileBackupPath)
+		log.Printf("- File Backup Max Size: %d MB", cfg.FileBackupMaxSizeMB)
+		log.Printf("- File Backup Max Age: %d hours", cfg.FileBackupMaxAgeHours)
 	}
 } 

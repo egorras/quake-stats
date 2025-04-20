@@ -149,4 +149,10 @@ func (m *mockDBClient) StoreEvents(events []Event) error {
 
 func (m *mockDBClient) Close() error {
 	return nil
+}
+
+func (m *mockDBClient) GetMetrics() map[string]interface{} {
+	return map[string]interface{}{
+		"mock_client": true,
+	}
 } 

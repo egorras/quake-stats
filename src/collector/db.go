@@ -14,6 +14,7 @@ import (
 type DBClient interface {
 	StoreEvents(events []Event) error
 	Close() error
+	GetMetrics() map[string]interface{}
 }
 
 // PostgresClient handles database operations
@@ -26,6 +27,13 @@ type PostgresClient struct {
 	closed          bool
 	idleTimeout     time.Duration
 	checkTimer      *time.Timer
+	// Connection metrics
+	connectCount        int
+	disconnectCount     int
+	reconnectCount      int
+	totalEventsStored   int
+	lastConnectTime     time.Time
+	lastDisconnectTime  time.Time
 }
 
 // NewPostgresClient creates a new PostgreSQL client
@@ -38,7 +46,7 @@ func NewPostgresClient(cfg Config) (DBClient, error) {
 		tableName:    cfg.PostgresTable,
 		config:       cfg,
 		lastActivity: time.Now(),
-		idleTimeout:  5 * time.Minute, // Default idle timeout - 5 minutes
+		idleTimeout:  time.Duration(cfg.PostgresIdleTimeoutMin) * time.Minute,
 	}
 
 	// Connect immediately for the first time
@@ -63,18 +71,44 @@ func (p *PostgresClient) connect() error {
 		return nil
 	}
 
+	// Track reconnect count if this isn't the first connection
+	if p.connectCount > 0 {
+		p.reconnectCount++
+	}
+
 	// Use the connection string directly
 	connectionString := p.config.PostgresConnectionString
 
-	db, err := sql.Open("postgres", connectionString)
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
+	// Try to connect with exponential backoff
+	var db *sql.DB
+	var err error
+	maxRetries := 3
+	retryDelay := 500 * time.Millisecond
+
+	for i := 0; i < maxRetries; i++ {
+		db, err = sql.Open("postgres", connectionString)
+		if err != nil {
+			log.Printf("Failed to open database connection (attempt %d/%d): %v", i+1, maxRetries, err)
+			time.Sleep(retryDelay)
+			retryDelay *= 2 // Exponential backoff
+			continue
+		}
+
+		// Test the connection
+		if err := db.Ping(); err != nil {
+			log.Printf("Failed to ping database (attempt %d/%d): %v", i+1, maxRetries, err)
+			db.Close()
+			time.Sleep(retryDelay)
+			retryDelay *= 2 // Exponential backoff
+			continue
+		}
+
+		// Connection successful
+		break
 	}
 
-	// Test the connection
-	if err := db.Ping(); err != nil {
-		db.Close()
-		return fmt.Errorf("failed to ping database: %w", err)
+	if err != nil {
+		return fmt.Errorf("failed to connect to database after %d attempts: %w", maxRetries, err)
 	}
 
 	// Set connection pool parameters
@@ -85,6 +119,8 @@ func (p *PostgresClient) connect() error {
 	p.db = db
 	p.closed = false
 	p.lastActivity = time.Now()
+	p.connectCount++
+	p.lastConnectTime = time.Now()
 
 	// Ensure the events table exists
 	if err := p.createTable(); err != nil {
@@ -123,6 +159,8 @@ func (p *PostgresClient) checkAndCloseIdleConnection() {
 		p.db.Close()
 		p.db = nil
 		p.closed = true
+		p.disconnectCount++
+		p.lastDisconnectTime = time.Now()
 	}
 
 	// Schedule next check
@@ -194,6 +232,9 @@ func (p *PostgresClient) StoreEvents(events []Event) error {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	// Update metrics
+	p.totalEventsStored += len(events)
+
 	log.Printf("Stored %d events in PostgreSQL database", len(events))
 	return nil
 }
@@ -213,4 +254,28 @@ func (p *PostgresClient) Close() error {
 		return p.db.Close()
 	}
 	return nil
+}
+
+// GetMetrics returns the connection metrics
+func (p *PostgresClient) GetMetrics() map[string]interface{} {
+	p.connectionMutex.Lock()
+	defer p.connectionMutex.Unlock()
+
+	metrics := map[string]interface{}{
+		"connect_count":        p.connectCount,
+		"disconnect_count":     p.disconnectCount,
+		"reconnect_count":      p.reconnectCount,
+		"total_events_stored":  p.totalEventsStored,
+		"connection_active":    p.db != nil && !p.closed,
+		"idle_timeout_minutes": p.idleTimeout.Minutes(),
+	}
+
+	if !p.lastConnectTime.IsZero() {
+		metrics["last_connect_time"] = p.lastConnectTime.Format(time.RFC3339)
+	}
+	if !p.lastDisconnectTime.IsZero() {
+		metrics["last_disconnect_time"] = p.lastDisconnectTime.Format(time.RFC3339)
+	}
+
+	return metrics
 } 

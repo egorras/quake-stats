@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"time"
 )
 
 // setupSignalHandling configures graceful shutdown on SIGINT/SIGTERM
@@ -25,6 +26,9 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	log.Printf("Quake Stats Collector starting")
 	
+	// Check if we're running the import tool
+	ImportTool()
+	
 	runtime.GOMAXPROCS(2)
 	
 	// Load configuration
@@ -38,20 +42,48 @@ func main() {
 	// Setup signal handling
 	setupSignalHandling(cancel)
 
+	// Initialize storage clients
+	var dbClients []DBClient
+
 	// Initialize PostgreSQL client if enabled
-	var dbClient DBClient
 	if cfg.PostgresEnabled {
-		var err error
-		dbClient, err = NewPostgresClient(cfg)
+		dbClient, err := NewPostgresClient(cfg)
 		if err != nil {
 			log.Printf("Warning: Failed to initialize PostgreSQL client: %v", err)
 		} else if dbClient != nil {
+			dbClients = append(dbClients, dbClient)
 			defer dbClient.Close()
 		}
 	}
 
+	// Initialize file backup client if enabled
+	if cfg.FileBackupEnabled {
+		fileBackupConfig := FileBackupConfig{
+			Enabled:     cfg.FileBackupEnabled,
+			BasePath:    cfg.FileBackupPath,
+			MaxFileSize: int64(cfg.FileBackupMaxSizeMB) * 1024 * 1024, // Convert MB to bytes
+			MaxFileAge:  time.Duration(cfg.FileBackupMaxAgeHours) * time.Hour,
+		}
+		
+		fileClient, err := NewFileBackupClient(fileBackupConfig)
+		if err != nil {
+			log.Printf("Warning: Failed to initialize file backup client: %v", err)
+		} else if fileClient != nil {
+			dbClients = append(dbClients, fileClient)
+			defer fileClient.Close()
+		}
+	}
+
+	// Create a multi-client if we have multiple storage options
+	var storageClient DBClient
+	if len(dbClients) > 1 {
+		storageClient = NewMultiDBClient(dbClients)
+	} else if len(dbClients) == 1 {
+		storageClient = dbClients[0]
+	}
+
 	// Create event processor
-	processor := NewEventProcessor(cfg, dbClient)
+	processor := NewEventProcessor(cfg, storageClient)
 	
 	// Create ZMQ collector factory
 	createZmqCollector := func(config *Config, proc EventProcessorInterface) (Collector, error) {

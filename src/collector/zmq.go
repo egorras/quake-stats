@@ -22,6 +22,20 @@ type ZmqCollector struct {
 
 // NewZmqCollector creates a new ZMQ collector
 func NewZmqCollector(endpoint string, processor EventProcessorInterface) (*ZmqCollector, error) {
+	// Validate endpoint format - ZMQ endpoints must start with a valid protocol
+	validProtocols := []string{"tcp://", "ipc://", "inproc://", "pgm://", "epgm://"}
+	isValidProtocol := false
+	for _, protocol := range validProtocols {
+		if strings.HasPrefix(endpoint, protocol) {
+			isValidProtocol = true
+			break
+		}
+	}
+	
+	if !isValidProtocol {
+		return nil, fmt.Errorf("invalid ZMQ endpoint protocol: %s (must start with tcp://, ipc://, etc.)", endpoint)
+	}
+
 	// Check if we're connecting to a remote server or binding locally
 	isRemoteConnection := !strings.HasPrefix(endpoint, "tcp://127.0.0.1") && 
 	                      !strings.HasPrefix(endpoint, "tcp://localhost") && 
