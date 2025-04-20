@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace QuakeStats.Domain.Events;
+namespace QuakeStats.Domain.Events.Attributes;
 
 /// <summary>
 /// Attribute to automatically register derived event types with JsonDerivedType using the event's EventType constant

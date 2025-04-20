@@ -1,8 +1,10 @@
 using System.Text.Json.Serialization;
+using QuakeStats.Domain.Events.Attributes;
 
 namespace QuakeStats.Domain.Events;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "TYPE")]
+[JsonDerivedEventType<MatchStartedEvent>()]
 [JsonDerivedEventType<PlayerConnectEvent>()]
 [JsonDerivedEventType<PlayerDisconnectEvent>()]
 public abstract record BaseEvent
