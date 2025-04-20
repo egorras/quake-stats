@@ -189,7 +189,7 @@ func (p *PostgresClient) StoreEvents(events []Event) error {
 
 	// Prepare the insert statement
 	stmt, err := tx.Prepare(fmt.Sprintf(
-		"INSERT INTO %s (type, data) VALUES ($1, $2)",
+		"INSERT INTO %s (event_type, event_data) VALUES ($1, $2)",
 		p.tableName,
 	))
 	if err != nil {

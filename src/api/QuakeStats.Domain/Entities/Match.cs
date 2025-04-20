@@ -23,6 +23,6 @@ public class Match : BaseEntity
         MatchGuid = @event.MatchGuid;
         Map = @event.Map;
         GameType = @event.GameType;
-        State = @event.Aborterd ? MatchState.Aborted : MatchState.Completed;
+        State = @event.Aborted ? MatchState.Aborted : MatchState.Completed;
     }
 }

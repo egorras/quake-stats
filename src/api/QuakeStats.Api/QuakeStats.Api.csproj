@@ -23,4 +23,8 @@
     <ProjectReference Include="..\QuakeStats.Infrastructure\QuakeStats.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Endpoints\Players\" />
+  </ItemGroup>
+
 </Project>

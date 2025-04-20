@@ -10,12 +10,12 @@ public class Player : BaseEntity
     public void Apply(PlayerConnectEvent @event)
     {
         Name = @event.Name;
-        SteamId = @event.StreamId;
+        SteamId = @event.SteamId;
     }
 
     public void Apply(PlayerDisconnectEvent @event)
     {
         Name = @event.Name;
-        SteamId = @event.StreamId;
+        SteamId = @event.SteamId;
     }
 }
