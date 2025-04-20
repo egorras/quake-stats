@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -74,7 +75,7 @@ func ImportTool() {
 		// Sort files by name (which includes timestamp)
 		// This isn't a perfect sort by date, but works for the filename format we use
 		// events_YYYYMMDD_HHMMSS.jsonl
-		strings.Sort(files)
+		sort.Strings(files)
 		
 		for i, file := range files {
 			fmt.Printf("[%d/%d] Importing file: %s\n", i+1, len(files), filepath.Base(file))
