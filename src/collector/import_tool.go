@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
 
 // ImportTool is a simple command-line tool to import event data from backup files to the database
