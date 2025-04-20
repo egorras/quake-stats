@@ -9,9 +9,7 @@ public abstract record BaseEvent
 {
     public abstract string EventType { get; }
 
-    [JsonPropertyName("MATCH_GUID")]
-    public Guid MatchId { get; init; }
-
+    public Guid MatchGuid { get; init; }
     public int Time { get; init; }
     public bool Warmup { get; init; }
 }

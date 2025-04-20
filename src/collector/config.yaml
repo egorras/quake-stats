@@ -6,4 +6,4 @@ verbose_logging: true
 # PostgreSQL configuration
 postgres_enabled: false  # Set to true to enable PostgreSQL storage
 postgres_connection_string: "postgresql://postgres:postgres@localhost:5432/quake_stats?sslmode=disable"
-postgres_table: Events 
+postgres_table: events 

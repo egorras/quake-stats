@@ -18,7 +18,8 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
         var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         
-        builder.UseNpgsql(connectionString);
+        builder.UseNpgsql(connectionString)
+               .UseSnakeCaseNamingConvention();
 
         return new ApplicationDbContext(builder.Options);
     }

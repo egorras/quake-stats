@@ -55,7 +55,7 @@ func loadConfig() Config {
 	// PostgreSQL defaults
 	v.SetDefault("postgres_enabled", false)
 	v.SetDefault("postgres_connection_string", "postgresql://postgres:postgres@localhost:5432/quake_stats?sslmode=disable")
-	v.SetDefault("postgres_table", "Events")
+	v.SetDefault("postgres_table", "events")
 	v.SetDefault("postgres_idle_timeout_min", 5)
 	
 	// File backup defaults

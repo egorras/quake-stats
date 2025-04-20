@@ -24,4 +24,4 @@ public class JsonDerivedEventTypeAttribute<T> : JsonDerivedTypeAttribute where T
         var field = typeof(T).GetField(nameof(BaseEvent.EventType));
         return field?.GetValue(null) as string ?? string.Empty;
     }
-} 
+}
