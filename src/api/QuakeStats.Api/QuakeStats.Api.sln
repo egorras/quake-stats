@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuakeStats.Api", "QuakeStats.Api.csproj", "{580A441C-651C-4F62-8085-40B2E36A4F10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuakeStats.Domain", "..\QuakeStats.Domain\QuakeStats.Domain.csproj", "{4AFD5DBF-95C9-4B5D-92D9-A86B402973B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuakeStats.Infrastructure", "..\QuakeStats.Infrastructure\QuakeStats.Infrastructure.csproj", "{792896D9-A7C0-42D6-9C64-82C1011B3CCC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{580A441C-651C-4F62-8085-40B2E36A4F10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{580A441C-651C-4F62-8085-40B2E36A4F10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{580A441C-651C-4F62-8085-40B2E36A4F10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{580A441C-651C-4F62-8085-40B2E36A4F10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AFD5DBF-95C9-4B5D-92D9-A86B402973B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AFD5DBF-95C9-4B5D-92D9-A86B402973B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AFD5DBF-95C9-4B5D-92D9-A86B402973B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AFD5DBF-95C9-4B5D-92D9-A86B402973B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{792896D9-A7C0-42D6-9C64-82C1011B3CCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{792896D9-A7C0-42D6-9C64-82C1011B3CCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{792896D9-A7C0-42D6-9C64-82C1011B3CCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{792896D9-A7C0-42D6-9C64-82C1011B3CCC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{580A441C-651C-4F62-8085-40B2E36A4F10} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{4AFD5DBF-95C9-4B5D-92D9-A86B402973B8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{792896D9-A7C0-42D6-9C64-82C1011B3CCC} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {13FF2C4D-019D-403A-B80F-B5F98B8C2228}
+	EndGlobalSection
+EndGlobal

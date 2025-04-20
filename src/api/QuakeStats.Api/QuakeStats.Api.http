@@ -1,0 +1,6 @@
+@QuakeStats.Api_HostAddress = http://localhost:5199
+
+GET {{QuakeStats.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

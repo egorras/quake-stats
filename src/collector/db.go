@@ -122,13 +122,6 @@ func (p *PostgresClient) connect() error {
 	p.connectCount++
 	p.lastConnectTime = time.Now()
 
-	// Ensure the events table exists
-	if err := p.createTable(); err != nil {
-		p.db.Close()
-		p.db = nil
-		return fmt.Errorf("failed to create table: %w", err)
-	}
-
 	log.Printf("Database connection established")
 	return nil
 }
@@ -169,21 +162,6 @@ func (p *PostgresClient) checkAndCloseIdleConnection() {
 	})
 }
 
-// createTable ensures the events table exists
-func (p *PostgresClient) createTable() error {
-	query := fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (
-			id SERIAL PRIMARY KEY,
-			event_type VARCHAR(50) NOT NULL,
-			event_data JSONB NOT NULL,
-			created_at TIMESTAMP NOT NULL DEFAULT NOW()
-		)
-	`, p.tableName)
-
-	_, err := p.db.Exec(query)
-	return err
-}
-
 // StoreEvents stores a batch of events in the database
 func (p *PostgresClient) StoreEvents(events []Event) error {
 	if len(events) == 0 {
@@ -211,7 +189,7 @@ func (p *PostgresClient) StoreEvents(events []Event) error {
 
 	// Prepare the insert statement
 	stmt, err := tx.Prepare(fmt.Sprintf(
-		"INSERT INTO %s (event_type, event_data) VALUES ($1, $2)",
+		"INSERT INTO %s (EventType, EventData) VALUES ($1, $2)",
 		p.tableName,
 	))
 	if err != nil {

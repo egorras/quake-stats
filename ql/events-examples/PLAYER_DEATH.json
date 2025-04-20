@@ -1,0 +1,67 @@
+{
+    "KILLER" : {
+       "AIRBORNE" : true,
+       "AMMO" : 20,
+       "ARMOR" : 0,
+       "BOT" : false,
+       "BOT_SKILL" : null,
+       "HEALTH" : -48,
+       "HOLDABLE" : null,
+       "NAME" : "garz",
+       "POSITION" : {
+          "X" : 439.7825927734375,
+          "Y" : -175.0157318115234,
+          "Z" : 452.6065673828125
+       },
+       "POWERUPS" : [ "QUAD" ],
+       "SPEED" : 823.2783551144777,
+       "STEAM_ID" : "76561198170654797",
+       "SUBMERGED" : false,
+       "TEAM" : 0,
+       "VIEW" : {
+          "X" : 16.36962890625,
+          "Y" : -27.57568359375,
+          "Z" : 0
+       },
+       "WEAPON" : "ROCKET"
+    },
+    "MATCH_GUID" : "d23d30e4-2137-4a33-b085-9db594e67d5a",
+    "MOD" : "ROCKET_SPLASH",
+    "OTHER_TEAM_ALIVE" : null,
+    "OTHER_TEAM_DEAD" : null,
+    "ROUND" : null,
+    "SUICIDE" : true,
+    "TEAMKILL" : false,
+    "TEAM_ALIVE" : null,
+    "TEAM_DEAD" : null,
+    "TIME" : 582,
+    "VICTIM" : {
+       "AIRBORNE" : true,
+       "AMMO" : 20,
+       "ARMOR" : 0,
+       "BOT" : false,
+       "BOT_SKILL" : null,
+       "HEALTH" : 0,
+       "HOLDABLE" : null,
+       "NAME" : "garz",
+       "POSITION" : {
+          "X" : 439.7825927734375,
+          "Y" : -175.0157318115234,
+          "Z" : 452.6065673828125
+       },
+       "POWERUPS" : [ "QUAD" ],
+       "SPEED" : 823.2783551144777,
+       "STEAM_ID" : "76561198170654797",
+       "STREAK" : 0,
+       "SUBMERGED" : false,
+       "TEAM" : 0,
+       "VIEW" : {
+          "X" : 16.36962890625,
+          "Y" : -27.57568359375,
+          "Z" : 0
+       },
+       "WEAPON" : "ROCKET"
+    },
+    "WARMUP" : true
+ }
+ 
