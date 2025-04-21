@@ -4,8 +4,8 @@ namespace QuakeStats.Domain.Entities;
 
 public class Player : BaseEntity
 {
-    public required string Name { get; set; }
-    public required string SteamId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string SteamId { get; set; } = string.Empty;
 
     public void Apply(PlayerConnectEvent @event)
     {

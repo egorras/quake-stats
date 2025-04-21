@@ -6,6 +6,8 @@ namespace QuakeStats.Domain.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum GameType
 {
+    None = 0,
+
     [Display(Name = "Attack & Defense")]
     [JsonStringEnumMemberName("AD")]
     AttackAndDefense,

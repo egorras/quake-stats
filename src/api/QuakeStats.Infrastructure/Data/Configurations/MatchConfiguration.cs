@@ -4,9 +4,9 @@ using QuakeStats.Domain.Entities;
 
 namespace QuakeStats.Infrastructure.Data.Configurations;
 
-internal class PlayerConfiguration : IEntityTypeConfiguration<Player>
+internal class MatchConfiguration : IEntityTypeConfiguration<Match>
 {
-    public void Configure(EntityTypeBuilder<Player> builder)
+    public void Configure(EntityTypeBuilder<Match> builder)
     {
         builder.Property(e => e.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

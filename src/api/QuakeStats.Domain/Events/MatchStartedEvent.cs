@@ -4,7 +4,6 @@ namespace QuakeStats.Domain.Events;
 
 public record MatchStartedEvent : BaseEvent
 {
-    public override string EventType => "MATCH_STARTED";
     public GameType GameType { get; set; }
     public required string Map { get; init; }
 }

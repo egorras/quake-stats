@@ -5,17 +5,20 @@ namespace QuakeStats.Domain.Entities;
 
 public class Match : BaseEntity
 {
-    public MatchState State { get; set; }
+    public DateTimeOffset StartedAt { get; set; }
+    public DateTimeOffset? ReportedAt { get; set; }
     public Guid MatchGuid { get; set; }
-    public required string Map { get; set; }
+    public string Map { get; set; } = string.Empty;
     public GameType GameType { get; set; }
+    public int TeamScoreRed { get; set; }
+    public int TeamScoreBlue { get; set; }
 
     public void Apply(MatchStartedEvent @event)
     {
         MatchGuid = @event.MatchGuid;
         Map = @event.Map;
         GameType = @event.GameType;
-        State = MatchState.Started;
+        StartedAt = DateTimeOffset.UtcNow;
     }
 
     public void Apply(MatchReportEvent @event)
@@ -23,6 +26,8 @@ public class Match : BaseEntity
         MatchGuid = @event.MatchGuid;
         Map = @event.Map;
         GameType = @event.GameType;
-        State = @event.Aborted ? MatchState.Aborted : MatchState.Completed;
+        TeamScoreRed = @event.TeamScoreRed;
+        TeamScoreBlue = @event.TeamScoreBlue;
+        ReportedAt = DateTimeOffset.UtcNow;
     }
 }
